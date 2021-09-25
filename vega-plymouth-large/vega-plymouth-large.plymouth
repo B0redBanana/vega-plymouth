@@ -1,0 +1,13 @@
+[Plymouth Theme]
+Name=VEGA Gaming logo
+Description=VEGA logo
+ModuleName=two-step
+
+[two-step]
+ImageDir=/usr/share/plymouth/themes/vega-plymouth-large
+HorizontalAlignment=.5
+VerticalAlignment=.5
+Transition=merge-fade
+TransitionDuration=.5
+BackgroundStartColor=0x030303
+BackgroundEndColor=0x030303
