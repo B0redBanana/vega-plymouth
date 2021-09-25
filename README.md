@@ -31,7 +31,7 @@ git clone https://github.com/B0redBanana/vega-plymouth.git
 ### How to use these themes?
 
 **Install using the script** 
-Once it's downloaded or cloned run the install for your distro and follow the instructions. It'll ask you for the path and preferred size!
+Once it's downloaded, run the install for your distro and follow the instructions. It'll ask you for the path and preferred size!
 
 **Install manually** (We're using the small version in this case, replace small with either medium or large, if desired)
 
