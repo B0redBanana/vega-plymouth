@@ -4,7 +4,7 @@ Description=VEGA logo
 ModuleName=two-step
 
 [two-step]
-ImageDir=/usr/share/plymouth/themes/vega-plymouth-small
+ImageDir=/usr/share/plymouth/themes/vega-small
 HorizontalAlignment=.5
 VerticalAlignment=.5
 Transition=merge-fade
