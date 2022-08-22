@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-A plymouth animation, derived from <a href="https://vega-gaming.de/">VEGA Gaming's</a> logo.
+A plymouth animation, derived from <a href="https://vega-gaming.de/">VEGA's</a> logo.
 
 ![gif](https://github.com/B0redBanana/vega-plymouth/blob/8697b7d5202bf335ef6f1677ece687d5e6515028/preview/logo.gif)
 </p>
@@ -21,7 +21,7 @@ A plymouth animation, derived from <a href="https://vega-gaming.de/">VEGA Gaming
 
 ### How to get these themes?
 
-**Download manually** 
+**Download and extract** 
 
 **or clone using:**
 ```bash
@@ -31,16 +31,19 @@ git clone https://github.com/B0redBanana/vega-plymouth.git
 ### How to use these themes?
 
 **Install using the script** 
-Once it's downloaded, run the install for your distro and follow the instructions. It'll ask you for the path and preferred size!
+Once it's downloaded, run the install script and follow the instructions. It'll ask you for the path, your distro and preferred size!
 
 **Install manually** (We're using the small version in this case, replace small with either medium or large, if desired)
 
 + For **Arch-based** distros
 ```bash
-# Make sure the Plymouth pakcage is installed
+# Make sure Plymouth is installed and set up
+
+#cd inside the folder containing the themes
+cd vega-plymouth/vega
 
 # Copying the theme into Plymouth's folder
-sudo cp -r vega-plymouth-small /usr/share/plymouth/themes/
+sudo cp -r vega-small /usr/share/plymouth/themes/
 
 # Set the theme as default
 sudo plymouth-set-default-theme -R vega-plymouth-small
@@ -48,19 +51,21 @@ sudo plymouth-set-default-theme -R vega-plymouth-small
 ```
 + For **Debian** based distros
 ```bash
-# Install Plymouth
-sudo apt install plymouth
+# Make sure Plymouth is installed and set up
+
+#cd inside the folder containing the themes
+cd vega-plymouth/vega
 
 # Copying the theme into Plymouth's folder
-sudo cp -r vega-plymouth-small /usr/share/plymouth/themes/
+sudo cp -r vega-small /usr/share/plymouth/themes/
 
 # Install the theme
-sudo update-alternatives --install /usr/share/plymouth/themes/default.plymouth default.plymouth /usr/share/plymouth/themes/vega-plymouth-small/vega-plymouth-small.plymouth 100
+sudo update-alternatives --install /usr/share/plymouth/themes/default.plymouth default.plymouth /usr/share/plymouth/themes/vega-small/vega-small.plymouth 100
 
 # Choose the theme you want to use
 sudo update-alternatives --config default.plymouth
 
-# Then udate initramfs
+# Then update initramfs
 sudo update-initramfs -u
 ``` 
 
@@ -69,3 +74,4 @@ sudo update-initramfs -u
 ### Important info
 + This was created with a resolution of 1920x1080
 + Feel free to leave suggestions or report any issues!
++ I can't get this to work with an ecrypted drive at the moment! Help would be appreciated!
