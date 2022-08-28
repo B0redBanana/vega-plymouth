@@ -19,6 +19,8 @@ DIR=$(pwd)
 read -p "1: Arch, 2: Debian: " DISTRO
 
 case $DISTRO in
+
+        1)
             echo "Pick A Size to Install:"
             read -p "1: Small (270x270px), 2: Medium (540x540px), 3: Large (1080x1080px): " size_select
             if test -z "$size_select";
