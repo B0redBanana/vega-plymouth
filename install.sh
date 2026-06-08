@@ -1,70 +1,122 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
 # Time to start the installer!
 
 clear
 
-# Looking for Plymouth's directory
+## Checking for elevated privileges
 
-while true; do
+if [ "$EUID" -ne 0 ]; then
     echo
-    echo "Enter Plymouth Directory Path"
-    read -erp "Press Return for the Default - /usr/share/plymouth/: " location
-    if test -z "$location"; then
-        location="/usr/share/plymouth/themes"
-    fi
-    if test "${location: -1}" != "/"; then
-        location="$location/"
-    fi
+    echo "This script requires sudo privileges. Restarting with sudo..."
+    sudo "$0" "$@"
+    exit
+fi
 
-    # Check if the directory exists and is not empty
-    if [[ -d "$location" && "$(ls -A "$location")" ]]; then
-        echo "Valid location! Continuing with installation to: $location"
-        break
-    else
-        echo "Invalid path. Please check your input."
-        sleep 1
-    fi
+dir="$(pwd)"
 
-done
+#################
+### FUNCTIONS ###
+#################
 
-DIR=$(pwd)
+                create_new_initramfs() {
+                    echo "Refreshing Initramfs"
+                    
+                    if command -v update-initramfs &>/dev/null; then
+                            update-initramfs -u &>/dev/null  
+                            elif command -v mkinitcpio &>/dev/null; then
+                            mkinitcpio -P &>/dev/null
+                            elif command -v dracut &>/dev/null; then
+                            dracut -f &>/dev/null
+                            else
+                        echo "Warning: Could not rebuild initramfs!"
+                    fi
+                }
 
-read -p "1: Arch, 2: Debian, 3: Ubuntu, 4: Fedora: " DISTRO
+                install_theme() {
+                echo "Installing $theme"
+
+                if [[ ! -d "$dir/vega/$theme" ]]; then
+                echo "Theme directory '$theme' not found."
+                exit 1
+                fi
+
+                echo "Installing $theme to /usr/share/plymouth/themes/$theme"
+                cp -r "$dir/vega/$theme" "/usr/share/plymouth/themes/$theme"
+                }
+
+echo "================================="
+echo "  VEGA Plymouth Theme Installer  "
+echo "================================="
+echo
+
+echo "Please choose your Distribution:"
+echo "1) Arch"
+echo "2) Debian"
+echo "3) Ubuntu"
+echo "4) Fedora"
+echo
+
+### Getting Distro ###
+
+read -rp "Select [1-4]: " DISTRO
+
+case "$DISTRO" in
+    1|2|3|4) ;;
+    *)
+        echo "Invalid selection"
+        exit 1
+        ;;
+esac
+
+### Getting preferred size ###
+
+echo "Choose a Resolution:"
+echo "1) Small  (270x270px)"
+echo "2) Medium (540x540px)"
+echo "3) Large  (1080x1080px)"
+echo
+
+read -rp "Select [1-3] (default 1): " size_select
+
+size_select=${size_select:-1}
+
+case "$size_select" in
+    1)
+        theme="vega-small"
+        ;;
+    2)
+        theme="vega-medium"
+        ;;
+    3)
+        theme="vega-large"
+        ;;
+    *)
+        echo "Invalid selection. Defaulting to Small (270x270)"
+        theme="vega-small"
+        ;;
+esac
+
+### Starting Installation ###
 
 case $DISTRO in
 
+##############
+###  Arch  ###
+##############
+
         1)
-            echo "Choose a Resolution:"
-            read -p "1: Small (270x270px), 2: Medium (540x540px), 3: Large (1080x1080px): " size_select
-            if test -z "$size_select";
-            then
-                size_select=1
-            fi
-            case "$size_select" in
-            1)
-                echo "Installing Small Resolution"
-                cd $DIR/vega
-                sudo cp -r vega-small /usr/share/plymouth/themes/
-                sudo plymouth-set-default-theme -R vega-small
-                ;;
-            2)
-                echo "Installing Medium Resolution"
-                cd $DIR/vega
-                sudo cp -r vega-medium /usr/share/plymouth/themes/
-                sudo plymouth-set-default-theme -R vega-medium
-                ;;
-            3)
-                echo "Installing Large Resolution"
-                cd $DIR/vega
-                sudo cp -r vega-large /usr/share/plymouth/themes/
-                sudo plymouth-set-default-theme -R vega-large
-                ;;
-        esac
 
-            create_new_initramfs
+            install_theme
+            plymouth-set-default-theme -R "$theme"
+            echo
+            echo "Setting Theme as Default"
+            echo
 
-            ;;
+create_new_initramfs
+;;
 
 ##############
 ### DEBIAN ###
@@ -72,40 +124,15 @@ case $DISTRO in
 
         2)
 
-            echo "Choose a Resolution:"
-            read -p "1: Small (270x270px), 2: Medium (540x540px), 3: Large (1080x1080px): " size_select
-            if test -z "$size_select";
-            then
-                size_select=1
-            fi
-
-            case "$size_select" in
-                1)
-                    echo "Installing Small Resolution"
-                    cd $DIR/vega
-                    sudo cp -r vega-small /usr/share/plymouth/themes/
-                    sudo update-alternatives --install /usr/share/plymouth/themes/default.plymouth default.plymouth /usr/share/plymouth/themes/vega-small/vega-small.plymouth 100
-                    ;;
-                2)
-                    echo "Installing Medium Resolution"
-                    cd $DIR/vega
-                    sudo cp -r vega-medium /usr/share/plymouth/themes/
-                    sudo update-alternatives --install /usr/share/plymouth/themes/default.plymouth default.plymouth /usr/share/plymouth/themes/vega-medium/vega-medium.plymouth 100
-                    ;;
-                3)
-                    echo "Installing Large Resolution"
-                    cd $DIR/vega
-                    sudo cp -r vega-large /usr/share/plymouth/themes/
-                    sudo update-alternatives --install /usr/share/plymouth/themes/default.plymouth default.plymouth /usr/share/plymouth/themes/vega-large/vega-large.plymouth 100
-                    ;;
-            esac
-            
-            
-                echo "Running update-alternatives"
-                sudo update-alternatives --config default.plymouth
+            install_theme
+            update-alternatives --install /usr/share/plymouth/themes/default.plymouth default.plymouth /usr/share/plymouth/themes/"$theme"/"$theme".plymouth 100
+            echo "Running update-alternatives"
+            echo
+            echo "Please choose the number corresponding to the installed theme."
+            echo 
+            update-alternatives --config default.plymouth
 
 create_new_initramfs
-
 ;;
 
 ##############
@@ -114,98 +141,33 @@ create_new_initramfs
 
         3)
 
-            echo "Choose a Resolution:"
-            read -p "1: Small (270x270px), 2: Medium (540x540px), 3: Large (1080x1080px): " size_select
-            if test -z "$size_select";
-            then
-                size_select=1
-            fi
-
-            case "$size_select" in
-                1)
-                    echo "Installing Small Resolution"
-                    cd $DIR/vega
-                    sudo cp -r vega-small /usr/share/plymouth/themes/
-                    sudo update-alternatives --install /usr/share/plymouth/themes/default.plymouth default.plymouth /usr/share/plymouth/themes/vega-small/vega-small.plymouth 100
-                    ;;
-                2)
-                    echo "Installing Medium Resolution"
-                    cd $DIR/vega
-                    sudo cp -r vega-medium /usr/share/plymouth/themes/
-                    sudo update-alternatives --install /usr/share/plymouth/themes/default.plymouth default.plymouth /usr/share/plymouth/themes/vega-medium/vega-medium.plymouth 100
-                    ;;
-                3)
-                    echo "Installing Large Resolution"
-                    cd $DIR/vega
-                    sudo cp -r vega-large /usr/share/plymouth/themes/
-                    sudo update-alternatives --install /usr/share/plymouth/themes/default.plymouth default.plymouth /usr/share/plymouth/themes/vega-large/vega-large.plymouth 100
-                    ;;
-            esac
-            
-            
-                echo "Running update-alternatives"
-                sudo update-alternatives --config default.plymouth
+            install_theme
+            update-alternatives --install /usr/share/plymouth/themes/default.plymouth default.plymouth /usr/share/plymouth/themes/"$theme"/"$theme".plymouth 100    
+            echo "Running update-alternatives"
+            echo                
+            echo "Please choose the number corresponding to the installed theme."
+            echo 
+            update-alternatives --config default.plymouth
 
 create_new_initramfs
 ;;
+
 ##############
 ### Fedora ###
 ##############
 
         4)
 
-            echo "Choose a Resolution:"
-            read -p "1: Small (270x270px), 2: Medium (540x540px), 3: Large (1080x1080px): " size_select
-            if test -z "$size_select";
-            then
-                size_select=1
-            fi
-
-            case "$size_select" in
-                1)
-                    echo "Installing Small Resolution"
-                    cd $DIR/vega
-                    sudo cp -r vega-small /usr/share/plymouth/themes/
-                    sudo plymouth-set-default-theme vega-small -R
-                    ;;
-                2)
-                    echo "Installing Medium Resolution"
-                    cd $DIR/vega
-                    sudo cp -r vega-medium /usr/share/plymouth/themes/
-                    sudo plymouth-set-default-theme vega-medium -R
-                    ;;
-                3)
-                    echo "Installing Large Resolution"
-                    cd $DIR/vega
-                    sudo cp -r vega-large /usr/share/plymouth/themes/
-                    sudo plymouth-set-default-theme vega-large -R
-                    ;;
-            esac
-            
-                echo "Setting Theme as Default"
-                sudo update-alternatives --config default.plymouth
+            install_theme
+            plymouth-set-default-theme "$theme" -R
+            echo
+            echo "Setting Theme as Default"
+            echo
 
 create_new_initramfs
 ;;
 
 esac
 
+echo
 echo "Done!"
-
-
-#################
-### FUNCTIONS ###
-#################
-
-                create_new_initramfs() {
-                echo "Refreshing Initramfs"
-                if type update-initramfs &>/dev/null; then
-                    update-initramfs -u &>/dev/null  
-                elif type mkinitcpio &>/dev/null; then
-                    mkinitcpio -P &>/dev/null
-                elif type dracut &>/dev/null; then
-                    dracut -f &>/dev/null
-                else
-                    echo "Warning: Could not rebuild initramfs!"
-                fi
-                }
